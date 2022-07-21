@@ -6,7 +6,7 @@ exports.isSignedIn=(req,res,next)=>{
     
 
     const authorizationHeader = req.headers["Authorization"];
-    const token = parseBearer(authorizationHeader);
+    // const token = parseBearer(authorizationHeader);
     console.log(token);
     if(verifytoken(token)){
         next()
