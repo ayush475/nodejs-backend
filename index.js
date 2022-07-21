@@ -1,6 +1,6 @@
 //connecting node js to  localhost or required hosts
 //enter the variables as desirable
-var mysql = require('mysql');
+var mysql = require('mysql2');
 
 var con = mysql.createConnection({
   host: "localhost",
