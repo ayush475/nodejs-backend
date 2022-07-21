@@ -13,7 +13,7 @@ router.delete('/dropproductTable',dropProductTable);
 
 
 // products
-router.post('/createnewproduct',isA,createNewProduct);
+router.post('/createnewproduct',createNewProduct);
 
 
 router.get('/products',getAllProducts);
