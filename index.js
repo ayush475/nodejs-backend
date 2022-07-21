@@ -1,33 +1,30 @@
-//connecting node js to  localhost or required hosts
-//enter the variables as desirable
-var mysql = require('mysql');
+const app = require("./app");
+const dotenv = require("dotenv");
+const db = require("./config/database");
 
-var con = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "password",
-  database: "classicmodels"
+
+dotenv.config({ path: "./config/.env" });
+port = process.env.PORT || 8000;
+
+//connecting to database
+
+
+
+//handling uncaught exception (console.log(you);)
+process.on("uncaughtException", (err) => {
+  console.log(err);
+  process.exit(1);
 });
 
-/*
-con.connect(function(err) {
-  if (err) throw err;
-  console.log("Connected!");
-  var sql = "select * from customers;";
-  con.query(sql, function (err, result) {
-    if (err) throw err;
-    console.log("test passes");
+const server = app.listen(port, () => {
+  console.log(`server running on port ${port}`);
+});
+
+// handling unhandeled promise rejection/mongodb parse error
+process.on("unhandledRejection", (err) => {
+  console.log(err);
+  console.log("shutting down the server due to unhandled rejection");
+  server.close(() => {
+    process.exit(1);
   });
 });
-
-*/
-con.connect(function(err) {
-  if (err) throw err;
-  con.query("SELECT * FROM customers where customernumber>=300", function (err, result, fields) {
-    if (err) throw err;
-    console.log(JSON.parse(JSON.stringify(result)));//json.parse  used
-  });
-
-});
-
-
