@@ -1,12 +1,15 @@
 const express=require('express');
 
-const { getAllSuppliers } = require('../controllers/supplierController');
+
+const {  createNewSupplier } = require('../controllers/supplierController');
 
 
 const router=express.Router();
 
 
-router.get('/suppliers',getAllSuppliers);
+router.post('/createnewsupplier',createNewSupplier);
+
+
 
 
 module.exports=router;

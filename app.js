@@ -9,6 +9,7 @@ const orderRoutes=require('./routes/orderRoutes');
 const supplierRoutes=require('./routes/supplierRoutes');
 const myOrderRoutes=require('./routes/myOrderRoutes');
 const productRoutes=require('./routes/productRoutes');
+const categoryRoutes =require('./routes/categoryRoutes');
 const errorMiddleware = require('./middlewares/error');
 
 
@@ -35,6 +36,7 @@ app.use('/',productRoutes); // customer routes
 app.use('/',supplierRoutes); // customer routes
 app.use('/',orderRoutes); // customer routes
 app.use('/',myOrderRoutes); // customer routes
+app.use('/',categoryRoutes);
 
 
 //  custom middlewares

@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 
 const jwt =require('jsonwebtoken');
 const { token } = require('morgan');
+const ErrorHandler = require('../errorHandler/errorhandler');
 
 
 exports.getHashedPassword=async(password)=>{
@@ -25,17 +26,21 @@ return  jwt.sign({
 }
 
 exports.verifytoken=(token)=>{
- return jwt.verify(token, 'shhhhh', function(err, decodedData) {
+  // console.log(token,"jjjjj");
+ return jwt.verify(token,process.env.JWT_SECTET_KEY, function(err, decodedData) {
     if (err) {
+      console.log("jwt error");
       /*
+      
         err = {
           name: 'TokenExpiredError',
           message: 'jwt expired',
           expiredAt: 1408621000
         }
       */
+    return false;
+    }else{
+      return decodedData;
     }
-    console.log(decodedData);
-    return decodedData;
   });
 }
