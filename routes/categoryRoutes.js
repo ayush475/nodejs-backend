@@ -1,11 +1,20 @@
 const express=require('express');
-const { createCategoryTable, dropCategoryTable } = require('../controllers/categoryController');
+const { deleteCategoryTable, createNewCategory, updateCategoryDetails, deleteCategory } = require('../controllers/categoryController');
+
+
 
 const router=express.Router();
 
 
-router.put('/createcategorytable',createCategoryTable);
-router.delete('/dropcategorytable',dropCategoryTable);
+
+// danger
+router.delete('/delete/categorytable',deleteCategoryTable);
+
+
+
+router.post('/createnewcategory',createNewCategory);
+router.put('/update/category/:categoryId',updateCategoryDetails);
+router.put('/delete/category/:categoryId',deleteCategory);
 
 
 module.exports=router;

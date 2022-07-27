@@ -3,9 +3,11 @@ const cloudinary = require("cloudinary");
 const path = require("path");
 
 const ErrorHandler = require("../errorHandler/errorhandler");
-const { createSupplierTableIfNotExist } = require("./creationTables/supplierCreation");
+const {
+  createSupplierTableIfNotExist,
+} = require("./creationTables/supplierCreation");
 
-exports.createNewSupplier = async(req, res, next) => {
+exports.createNewSupplier = async (req, res, next) => {
   const {
     name,
     email,
@@ -18,12 +20,14 @@ exports.createNewSupplier = async(req, res, next) => {
     supplierDetails,
     supplierImage,
   } = req.body;
-  
 
-  const defaultSupplierImage = path.join(__dirname,"../defaultImages/defaultSupplierImage.jpg");
+  const defaultSupplierImage = path.join(
+    __dirname,
+    "../defaultImages/defaultSupplierImage.jpg"
+  );
   const supplierImageUpload = supplierImage || defaultSupplierImage;
-  
-  console.log(defaultSupplierImage,"llm");
+
+  console.log(defaultSupplierImage, "llm");
   const mycloud = await cloudinary.v2.uploader.upload(supplierImageUpload, {
     folder: "tech-pasal-inventory-management/suppliers",
     width: 400,
@@ -32,11 +36,11 @@ exports.createNewSupplier = async(req, res, next) => {
     crop: "scale",
   });
 
-  const supplierImageJson={
+  const supplierImageJson = {
     public_id: mycloud.public_id,
     image_url: mycloud.secure_url,
-  }
-console.log(supplierImageJson);
+  };
+  console.log(supplierImageJson);
   // create
   createSupplierTableIfNotExist()
     .then((result) => {
@@ -56,7 +60,7 @@ console.log(supplierImageJson);
       '${`{"public_id":"${supplierImageJson.public_id}","image_url":"${supplierImageJson.image_url}"}`}'
       );`;
 
-      console.log(sqlQuery);
+        console.log(sqlQuery);
 
         db.query(sqlQuery, function (err, result, fields) {
           if (err) {
@@ -71,56 +75,92 @@ console.log(supplierImageJson);
     })
     .catch((err) => {
       console.log(err);
-      return next( new ErrorHandler(400, err.code));
+      return next(new ErrorHandler(400, err.code));
     });
 };
 
+exports.updateSupplierDetails = async (req, res, next) => {
+  const { supplierId } = req.params;
+  var updateData = req.body;
 
-exports.updateSupplierDetails = (req, res, next) => {
-  const {supplierId}=req.params;
-// console.log(supplierId,"mmmmm");
-  const {
-    name,
-    email,
-    country,
-    state,
-    city,
-    street,
-    pinCode,
-    poBox,
-    supplierDetails,
-    
-  } = req.body;
- 
+  // set update block of query from request which are defined
+  var updateBlockQuery = "set ";
+  Object.keys(updateData).forEach((key) => {
+    if (
+      updateData[key] !== null &&
+      updateData[key] !== "" &&
+      updateData[key] != undefined
+    ) {
+      updateBlockQuery += `${key}='${updateData[key]}',`;
+    }
+  });
 
+  // remove comma from last key paramerter
+  // console.log(updateBlockQuery.length);
+  var finalUpdatedQuery = await updateBlockQuery.slice(0, -1);
+
+  // var onlyUpdateQuery= req.body.filter(function(x) { return x !== null });
+
+  // console.log(updateBlockQuery);
+
+  var sqlQuery = `update supplier ${finalUpdatedQuery} where supplierId=${supplierId};`;
+    console.log(sqlQuery);
+
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "supplier not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true, message: `supplier details updated sucessfully` });
+  });
+};
+
+exports.deleteSupplier = async (req, res, next) => {
+  const { supplierId } = req.params;
   
-      //   var sqlQuery = `update Supplier
-      //   set ${name?`name="${name}":" "`}
-      //   country="engleand",
-      //   supplierDetails="this  is a good supplier"
-      //  where supplierId=${supplierId};`;
 
-       console.log(sqlQuery);
-
-        db.query(sqlQuery, function (err, result, fields) {
-          if (err) {
-            return next(new ErrorHandler(400, err.code));
-          }
-          // console.log();//json.parse  used
-          console.log(result.info);
-          if(result.affectedRows==0){
-            return next(new ErrorHandler(404, "supplier not found"));
-          }
-          return res
-            .status(200)
-            .json({ sucess: true, message: `supplier details updated sucessfully` });
-        });
-   
+  var sqlQuery=` update Supplier set removedDate=now() where supplierId=${supplierId};`
+ 
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "supplier not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true, message: `supplier deleted  sucessfully` });
+  });
 };
 
 
+exports.deleteSupplierTable = async (req, res, next) => {
+  var sqldropTriggerQuery = `drop trigger beforeSupplierUpdate;`;
+  var sqldropSupplierUpdateTableQuery = `drop table supplierUpdate;`;
+  var sqldropSupplierTableQuery = `drop table supplier;`;
 
-        
-  
-
-
+  db.query(
+    `${sqldropTriggerQuery} ${sqldropSupplierUpdateTableQuery} ${sqldropSupplierTableQuery}`,
+    function (err, result, fields) {
+      if (err) {
+        return next(new ErrorHandler(400, err.code));
+      }
+      // console.log();//json.parse  used
+      return res
+        .status(200)
+        .json({
+          sucess: true,
+          message: `supplier table ,its update table and before update trigger deleted sucessfully`,
+        });
+    }
+  );
+};

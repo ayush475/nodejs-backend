@@ -1,46 +1,13 @@
 const db = require("../config/database");
+const cloudinary = require("cloudinary");
+const path = require("path");
+
 const ErrorHandler = require("../errorHandler/errorhandler");
 const { getHashedPassword } = require("../utils/checkCredential");
+const { createCustomerTableIfNotExist } = require("./creationTables/customerCreation");
+
 
 // to create table in database
-exports.createCustomerTable = (req, res, next) => {
-  var sqlQuery = `create table Customer(customerId integer auto_increment unique not null primary key ,
-    email varchar(50) unique not null,
-    password varchar(255) not null,
-    name varchar(50) not null,
-    customerType varchar(20) not null,
-    state varchar(50) not null,
-    city varchar(50) not null,
-    street varchar(50) not null,
-    contactNo varchar(10) not null,
-    profileImage json,
-    shippingAddress varchar(255) default null,
-    openedDate datetime default null,
-    closedDate datetime default null
-    );`;
-  db.query(sqlQuery, function (err, result, fields) {
-    if (err) {
-      return next(new ErrorHandler(400, err.code));
-    }
-    // console.log();//json.parse  used
-    return res
-      .status(200)
-      .json({ sucess: true, message: "table customer created sucessfuly" });
-  });
-};
-
-exports.dropCustomerTable = (req, res, next) => {
-  var sqlQuery = `drop table customer`;
-  db.query(sqlQuery, function (err, result, fields) {
-    if (err) {
-      return next(new ErrorHandler(400, err.code));
-    }
-    // console.log();//json.parse  used
-    return res
-      .status(200)
-      .json({ sucess: true, message: "table customer dropped sucessfully" });
-  });
-};
 
 exports.createNewCustomer = async(req, res, next) => {
   const {
@@ -57,39 +24,167 @@ exports.createNewCustomer = async(req, res, next) => {
 
   const hashedPassword= await getHashedPassword(password);
 
-  var sqlQuery = `insert into customer(email,password,name,customerType,state,city,street,contactNo,profileImage,openedDate) 
-   values(
-"${email}",
-    "${hashedPassword}",
-    "${name}",
-   "${customerType}",
-    "${state}",
-    "${city}",
-    "${street}",
-    "${contactNo}",
-    ${profileImage},
-    ${null}
-  );`;
 
-  // console.log(hashedPassword,"fff");
-  db.query(sqlQuery, function (err, result, fields) {
-    if (err){
-      return next(new ErrorHandler(400,err.code))
-    };
-    // console.log();//json.parse  used
-    return res.status(200).json({sucess:true,message:`user with email ${email} created`});
+  const defaultcustomerImage = path.join(
+    __dirname,
+    "../defaultImages/defaultCustomerImage.jpg"
+  );
+  const customerImageUpload= profileImage || defaultcustomerImage;
+
+  console.log(defaultcustomerImage, "llm");
+  const mycloud = await cloudinary.v2.uploader.upload(customerImageUpload, {
+    folder: "tech-pasal-inventory-management/customers",
+    width: 400,
+    height: 450,
+    quality: 100,
+    crop: "scale",
   });
+
+  const customerImageJson = {
+    public_id: mycloud.public_id,
+    image_url: mycloud.secure_url,
+  };
+  console.log(customerImageJson);
+  // create
+
+  createCustomerTableIfNotExist()
+  .then((result) => {
+    if (result) {
+      // insert values into supplier
+      console.log(result, "sssssssssss");
+    
+  var sqlQuery = `insert into customer(email,password,name,customerType,state,city,street,contactNo,profileImage) 
+  values(
+"${email}",
+   "${hashedPassword}",
+   "${name}",
+  "${customerType}",
+   "${state}",
+   "${city}",
+   "${street}",
+   "${contactNo}",
+   '${`{"public_id":"${customerImageJson.public_id}","image_url":"${customerImageJson.image_url}"}`}'
+ );`;
+
+ // console.log(hashedPassword,"fff");
+ db.query(sqlQuery, function (err, result, fields) {
+   if (err){
+     return next(new ErrorHandler(400,err.code))
+   };
+   // console.log();//json.parse  used
+   return res.status(200).json({sucess:true,message:`user with email ${email} created`});
+ });
+
+     
+
+     
+    }
+  })
+  .catch((err) => {
+    console.log(err);
+    return next(new ErrorHandler(400, err.code));
+  });
+
+
+
+
+
+
+
 };
 
-exports.getAllCustomers = (req, res, next) => {
-  const { limit } = req.body;
-  var sqlQuery = `Select* from customer limit ${limit}`;
+
+
+
+
+exports.updateCustomerDetails = async (req, res, next) => {
+  const { customerId } = req.params;
+  var updateData = req.body;
+
+  // set update block of query from request which are defined
+  var updateBlockQuery = "set ";
+  Object.keys(updateData).forEach((key) => {
+    if (
+      updateData[key] !== null &&
+      updateData[key] !== "" &&
+      updateData[key] != undefined
+    ) {
+      // skip password key for this update
+      if(key!=="password"){
+        updateBlockQuery += `${key}='${updateData[key]}',`;
+      }
+      
+    }
+  });
+
+  // remove comma from last key paramerter
+  // console.log(updateBlockQuery.length);
+  var finalUpdatedQuery = await updateBlockQuery.slice(0, -1);
+
+  // var onlyUpdateQuery= req.body.filter(function(x) { return x !== null });
+
+  // console.log(updateBlockQuery);
+
+  var sqlQuery = `update customer ${finalUpdatedQuery} where customerId=${customerId};`;
+    console.log(sqlQuery);
+
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
-      return next(new ErrorHandler(404, err.code));
+      return next(new ErrorHandler(400, err.code));
     }
     // console.log();//json.parse  used
-   
-        return res.status(200).json(result);
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "customer not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true, message: `customer details updated sucessfully` });
   });
 };
+
+exports.deleteCustomer= async (req, res, next) => {
+  const { customerId } = req.params;
+  
+
+  var sqlQuery=` update Customer set closedDate=now() where customerId=${customerId};`
+ 
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "customer not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true, message: `customer deleted  sucessfully` });
+  });
+};
+
+
+exports.deleteCustomerTable = async (req, res, next) => {
+  var sqldropTriggerQuery = `drop trigger beforeCustomerUpdate;`;
+  var sqldropUpdateTableQuery = `drop table CustomerUpdate;`;
+  var sqldropTableQuery = `drop table Customer;`;
+
+  db.query(
+    `${sqldropTriggerQuery} ${sqldropUpdateTableQuery} ${sqldropTableQuery}`,
+    function (err, result, fields) {
+      if (err) {
+        return next(new ErrorHandler(400, err.code));
+      }
+      // console.log();//json.parse  used
+      return res
+        .status(200)
+        .json({
+          sucess: true,
+          message: `customer table ,its update table and before update trigger deleted sucessfully`,
+        });
+    }
+  );
+};
+
+

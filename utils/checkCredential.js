@@ -18,10 +18,11 @@ exports.comparePassword=async(password,hashedPassword)=>{
 }
 
 
-exports.generateToken=(customerId,email)=>{
+exports.generateToken=(customerId,email,role)=>{
 return  jwt.sign({
     customerId:customerId,
-    email:email
+    email:email,
+    role:role
   }, process.env.JWT_SECTET_KEY, { expiresIn: '1h' });
 }
 
@@ -40,6 +41,7 @@ exports.verifytoken=(token)=>{
       */
     return false;
     }else{
+      console.log(decodedData);
       return decodedData;
     }
   });

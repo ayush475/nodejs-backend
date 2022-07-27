@@ -1,18 +1,22 @@
 const express=require('express');
-const { getAllCustomers, createCustomerTable, dropCustomerTable, createNewCustomer } = require('../controllers/customerController');
+const { deleteCustomerTable, createNewCustomer, updateCustomerDetails, deleteCustomer } = require('../controllers/customerController');
+const { getAllOrders } = require('../controllers/orderController');
+const { getAllProducts, createProductTable, dropProductTable, createNewProduct, updateProductDetails, deleteProduct, deleteProductTable } = require('../controllers/productController');
+const { isSignedIn } = require('../utils/authentication');
+
 
 const router=express.Router();
 
-// root allert 
-router.post('/createcustomertable',createCustomerTable);
-router.delete('/dropCustomerTable',dropCustomerTable);
 
 
-// customers
+// danger
+router.delete('/delete/customertable',deleteCustomerTable);
+
+
+
 router.post('/createnewcustomer',createNewCustomer);
-
-
-router.get('/customers',getAllCustomers);
+router.put('/update/customer/:customerId',updateCustomerDetails);
+router.put('/delete/customer/:customerId',deleteCustomer);
 
 
 module.exports=router;
