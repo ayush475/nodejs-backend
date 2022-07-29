@@ -9,6 +9,7 @@ const authRoutes=require('./routes/authRoutes');
 const customerRoutes=require('./routes/customerRoutes');
 const orderRoutes=require('./routes/orderRoutes');
 const supplierRoutes=require('./routes/supplierRoutes');
+const customerOrderRoutes=require('./routes/customerOrderRoutes');
 const myOrderRoutes=require('./routes/myOrderRoutes');
 const productRoutes=require('./routes/productRoutes');
 const categoryRoutes =require('./routes/categoryRoutes');
@@ -41,6 +42,7 @@ app.use('/',supplierRoutes); // customer routes
 app.use('/',orderRoutes); // customer routes
 app.use('/',myOrderRoutes); // customer routes
 app.use('/',categoryRoutes);
+app.use('/',customerOrderRoutes);
 
 
 //  custom middlewares

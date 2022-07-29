@@ -26,19 +26,20 @@ exports.createCustomerTableIfNotExist = async () => {
         );`;
 
     var sqlQueryUpdateTable = `create table CustomerUpdate(updateId int auto_increment unique not null,
-                customerId int not null references Customer(customerId),
-                email varchar(50) not null,
-                name varchar(50) not null,
-                customerType varchar(20) not null,
-                state varchar(50) not null,
-                city varchar(50) not null,
-                street varchar(50) not null,
-                contactNo varchar(10) not null,
-                role varchar(10) not null,
-                shippingAddress varchar(255) default null,
-                updatedOn datetime default null,
-                action varchar(50) DEFAULT null
-                );`;
+      customerId int not null  ,
+      email varchar(50) not null,
+      name varchar(50) not null,
+      customerType varchar(20) not null,
+      state varchar(50) not null,
+      city varchar(50) not null,
+      street varchar(50) not null,
+      contactNo varchar(10) not null,
+      role varchar(10) not null,
+      shippingAddress varchar(255) default null,
+      updatedOn datetime default null,
+      action varchar(50) DEFAULT null,
+      foreign key(customerId) references Customer(customerId)
+      );`;
 
     var sqlBeforeUpdateTrigger =
       "CREATE TRIGGER beforeCustomerUpdate" +

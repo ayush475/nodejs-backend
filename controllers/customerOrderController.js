@@ -10,16 +10,17 @@ const {
 const {
   createMyOrderTableIfNotExist,
 } = require("./creationTables/myOrderCreation");
-const { convertToMySqlDateTime, getVatFromProduct, getCustomDutyFromProduct, getEachPriceFromProduct } = require("./creationTables/commonCreation");
+const { convertToMySqlDateTime, getVatFromProduct, getEachPriceFromProduct } = require("./creationTables/commonCreation");
+const { createCustomerOrderTableIfNotExist } = require("./creationTables/customerOrderCreation");
 
 // to create table in database
 
-exports.createNewMyOrder = async (req, res, next) => {
-  const { productId, quantity } = req.body;
+exports.createNewCustomerOrder = async (req, res, next) => {
+  const { productId, customerId,quantity } = req.body;
 
   // write functio to ger tproice each and ductum duty from obtained productId
   const eachPrice = await getEachPriceFromProduct(productId);
-  const customDuty = await getCustomDutyFromProduct(productId);
+  const vat = await getVatFromProduct(productId);
 
 
   let expectedDeliveryDate=new Date();
@@ -36,18 +37,19 @@ exports.createNewMyOrder = async (req, res, next) => {
 
 
 
-  createMyOrderTableIfNotExist()
+  createCustomerOrderTableIfNotExist()
     .then((result) => {
       if (result) {
         // insert values into supplier
         console.log(result, "sssssssssss");
 
-        var sqlQuery = ` Insert into MYOrder(productId,quantity,eachPrice,customDuty,expectedDeliveryDate) 
+        var sqlQuery = ` Insert into CustomerOrder(productId,customerId,quantity,eachPrice,vat,expectedDeliveryDate) 
   values(
 "${productId}",
+"${customerId}",
    "${quantity}",
    "${eachPrice}",
-  "${customDuty}",
+  "${vat}",
   "${expectedDeliveryDate}");`;
 
   console.log(sqlQuery);
@@ -60,7 +62,7 @@ exports.createNewMyOrder = async (req, res, next) => {
           // console.log();//json.parse  used
           return res
             .status(200)
-            .json({ sucess: true, message: `Import order placed sucessfully` });
+            .json({ sucess: true, message: ` order placed sucessfully` });
         });
       }
     })
@@ -70,8 +72,8 @@ exports.createNewMyOrder = async (req, res, next) => {
     });
 };
 
-exports.updateMyOrderDetails = async (req, res, next) => {
-  const { myOrderId } = req.params;
+exports.updateCustomerOrderDetails = async (req, res, next) => {
+  const { customerOrderId } = req.params;
   var updateData = req.body;
 
   // set update block of query from request which are defined
@@ -82,8 +84,8 @@ exports.updateMyOrderDetails = async (req, res, next) => {
       updateData[key] !== "" &&
       updateData[key] != undefined
     ) {
-     
-     
+      // skip password key for this update
+    
         updateBlockQuery += `${key}='${updateData[key]}',`;
       
     }
@@ -97,7 +99,7 @@ exports.updateMyOrderDetails = async (req, res, next) => {
 
   // console.log(updateBlockQuery);
 
-  var sqlQuery = `update myOrder ${finalUpdatedQuery} where myOrderId=${myOrderId};`;
+  var sqlQuery = `update CustomerOrder ${finalUpdatedQuery} where orderId=${customerOrderId};`;
   console.log(sqlQuery);
 
   db.query(sqlQuery, function (err, result, fields) {
@@ -107,18 +109,18 @@ exports.updateMyOrderDetails = async (req, res, next) => {
     // console.log();//json.parse  used
     console.log(result.info);
     if (result.affectedRows == 0) {
-      return next(new ErrorHandler(404, "import order not found"));
+      return next(new ErrorHandler(404, " order not found"));
     }
     return res
       .status(200)
-      .json({ sucess: true, message: `import  details updated sucessfully` });
+      .json({ sucess: true, message: `order details updated sucessfully` });
   });
 };
 
-exports.cancelMyOrder = async (req, res, next) => {
-  const { myOrderId } = req.params;
+exports.cancelCustomerOrder = async (req, res, next) => {
+  const {customerOrderId } = req.params;
 
-  var sqlQuery = ` update MyOrder set myOrderStatus="cancelled",cancelledDate=Now() where myOrderId=${myOrderId};`;
+  var sqlQuery = ` update CustomerOrder set orderStatus="cancelled",cancelledDate=Now() where orderId=${customerOrderId};`;
 
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
@@ -127,32 +129,11 @@ exports.cancelMyOrder = async (req, res, next) => {
     // console.log();//json.parse  used
     console.log(result.info);
     if (result.affectedRows == 0) {
-      return next(new ErrorHandler(404, "import order not found"));
+      return next(new ErrorHandler(404, "order not found"));
     }
     return res
       .status(200)
-      .json({ sucess: true, message: `import order cancelled  sucessfully` });
+      .json({ sucess: true, message: `order cancelled  sucessfully` });
   });
 };
 
-// exports.deleteCustomerTable = async (req, res, next) => {
-//   var sqldropTriggerQuery = `drop trigger beforeCustomerUpdate;`;
-//   var sqldropUpdateTableQuery = `drop table CustomerUpdate;`;
-//   var sqldropTableQuery = `drop table Customer;`;
-
-//   db.query(
-//     `${sqldropTriggerQuery} ${sqldropUpdateTableQuery} ${sqldropTableQuery}`,
-//     function (err, result, fields) {
-//       if (err) {
-//         return next(new ErrorHandler(400, err.code));
-//       }
-//       // console.log();//json.parse  used
-//       return res
-//         .status(200)
-//         .json({
-//           sucess: true,
-//           message: `customer table ,its update table and before update trigger deleted sucessfully`,
-//         });
-//     }
-//   );
-// };

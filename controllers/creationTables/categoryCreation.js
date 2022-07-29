@@ -29,7 +29,8 @@ exports.createCategoryTableIfNotExist =async () => {
                 vat int  not null,
                 customDuty  int   not null,
                 updatedOn datetime default null,
-                action varchar(50) DEFAULT null
+                action varchar(50) DEFAULT null,
+                foreign key(categoryId) references Category(categoryId)
                 );`;
 
                 var sqlBeforeUpdateTrigger='CREATE TRIGGER beforeCategoryUpdate'+

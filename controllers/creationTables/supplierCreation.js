@@ -12,7 +12,7 @@ exports.createSupplierTableIfNotExist =async () => {
     if(!isTableExist){
 
         // query to create supplier table
-        var sqlQueryTable=`create table  Supplier(supplierId int auto_increment unique not null primary key ,
+        var sqlQueryTable=`create table  if not exists Supplier(supplierId int auto_increment unique not null primary key ,
             name varchar(50) unique not null,
             email varchar(50) unique not null,
             country varchar(50) not null,
@@ -28,8 +28,8 @@ exports.createSupplierTableIfNotExist =async () => {
             );`
 
 
-            var sqlQueryUpdateTable=`create table if not exists  SupplierUpdate(updateId int auto_increment unique not null,
-                supplierId int not null references Supplier(supplierId),
+            var sqlQueryUpdateTable=`create table  SupplierUpdate(updateId int auto_increment unique not null,
+                supplierId int not null ,
                 name varchar(50)  not null,
                 email varchar(50)  not null,
                 country varchar(50) not null,
@@ -40,7 +40,8 @@ exports.createSupplierTableIfNotExist =async () => {
                 poBox int  not null,
                 supplierDetails varchar(255) not null,
                 updatedOn datetime default null,
-                action varchar(50) DEFAULT null
+                action varchar(50) DEFAULT null,
+                foreign key(supplierId) references Supplier(supplierId)
                 );`;
 
                 var sqlBeforeUpdateTrigger='CREATE TRIGGER beforeSupplierUpdate'+
