@@ -10,7 +10,7 @@ const router=express.Router();
 
 console.log("lll");
 
-router.post('/createnewcustomerorder',createNewCustomerOrder);
+router.post('/createnewcustomerorder',isSignedIn,createNewCustomerOrder);
 router.put('/update/customerorder/:customerOrderId',updateCustomerOrderDetails);
 router.put('/cancel/customerorder/:customerOrderId',cancelCustomerOrder);
 

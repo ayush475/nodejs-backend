@@ -1,6 +1,7 @@
 const express=require('express');
 const dotenv=require('dotenv');
 const morgan=require('morgan');
+const cors=require('cors');
 
 const fileUpload=require('express-fileupload');
 dotenv.config({path:"./config/.env"})
@@ -27,7 +28,7 @@ const app=express();
 app.use(express.json({limit:'50mb', extended: true}));
 app.use(morgan('tiny'));
 app.use(fileUpload());
-
+app.use(cors({origin: true, credentials: true, }));
 
 
 

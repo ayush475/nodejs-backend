@@ -16,7 +16,9 @@ const { createCustomerOrderTableIfNotExist } = require("./creationTables/custome
 // to create table in database
 
 exports.createNewCustomerOrder = async (req, res, next) => {
-  const { productId, customerId,quantity } = req.body;
+  const { productId, quantity } = req.body;
+  // console.log(req.user.customerId);
+  const customerId=req.user.customerId;
 
   // write functio to ger tproice each and ductum duty from obtained productId
   const eachPrice = await getEachPriceFromProduct(productId);

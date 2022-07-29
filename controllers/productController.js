@@ -7,6 +7,7 @@ const {
   createSupplierTableIfNotExist,
 } = require("./creationTables/supplierCreation");
 const { createProductTableIfNotExist } = require("./creationTables/productCreation");
+const { getVatFromCategory, getCustomDutyFromCategory } = require("./creationTables/commonCreation");
 
 exports.createNewProduct = async (req, res, next) => {
   const {
@@ -15,11 +16,12 @@ exports.createNewProduct = async (req, res, next) => {
     brand,
     productDescription,
     price,
-    customDuty,
-    vat,
     supplierId,
     productImage
   } = req.body;
+
+  const vat= await getVatFromCategory(category);
+  const customDuty=await getCustomDutyFromCategory(category);
 
   const defaultProductImage = path.join(
     __dirname,
@@ -142,13 +144,10 @@ exports.deleteProduct= async (req, res, next) => {
 };
 
 
-exports.deleteProductTable = async (req, res, next) => {
-  var sqldropTriggerQuery = `drop trigger beforeProductUpdate;`;
-  var sqldropUpdateTableQuery = `drop table ProductUpdate;`;
-  var sqldropTableQuery = `drop table Product;`;
-
+exports.getProductDetailsForStore = async (req, res, next) => {
+var sqlQuery=`select name,brand ,price,productImage,productId from Product;`;
   db.query(
-    `${sqldropTriggerQuery} ${sqldropUpdateTableQuery} ${sqldropTableQuery}`,
+    sqlQuery,
     function (err, result, fields) {
       if (err) {
         return next(new ErrorHandler(400, err.code));
@@ -158,8 +157,30 @@ exports.deleteProductTable = async (req, res, next) => {
         .status(200)
         .json({
           sucess: true,
-          message: `product table ,its update table and before update trigger deleted sucessfully`,
+          data:result,
         });
     }
   );
 };
+
+
+exports.getProductFullDetailsForOrder = async (req, res, next) => {
+  const {productId}=req.params;
+  var sqlQuery=`select name,brand,productId ,price,category,stock,productDescription ,productImage,vat from Product where productId=${productId};`;
+    db.query(
+      sqlQuery,
+      function (err, result, fields) {
+        if (err) {
+          return next(new ErrorHandler(400, err.code));
+        }
+        // console.log();//json.parse  used
+        return res
+          .status(200)
+          .json({
+            sucess: true,
+            data:result,
+          });
+      }
+    );
+  };
+  

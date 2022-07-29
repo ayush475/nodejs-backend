@@ -96,3 +96,58 @@ exports.getCustomDutyFromProduct = (productId) => {
       });
     });
   };
+
+
+
+
+  exports.getVatFromCategory = (categoryName) => {
+    var sqlQuery =`select getVatFromCategory('${categoryName}');`;
+    console.log(sqlQuery);
+  
+    return new Promise(async (resolve, reject) => {
+      db.query(sqlQuery, function (err, result, fields) {
+        if (err) {
+          reject(err);
+        }
+        
+        console.log(result,"mmm");
+        if (result.length > 0) {
+          console.log(result[0]);
+          const data=result[0];
+        
+           var [firstKey]=Object.keys(result[0]);
+          // console.log(data[firstKey]);
+          resolve(data[firstKey]);
+        } else {
+          resolve(false);
+        }
+      });
+    });
+  };
+  
+  
+  exports.getCustomDutyFromCategory = (categoryName) => {
+      var sqlQuery =`select getCustomDutyFromCategory('${categoryName}');`;
+      console.log(sqlQuery);
+    
+      return new Promise(async (resolve, reject) => {
+        db.query(sqlQuery, function (err, result, fields) {
+          if (err) {
+            reject(err);
+          }
+          console.log(result,"mmmmmm");
+          
+          if (result.length > 0) {
+            console.log(result[0]);
+            const data=result[0];
+          
+             var [firstKey]=Object.keys(result[0]);
+            // console.log(data[firstKey]);
+            resolve(data[firstKey]);
+          } else {
+            resolve(false);
+          }
+        });
+      });
+    };
+  

@@ -7,7 +7,7 @@ const {isSignedIn}=require('../utils/authentication')
 const router=express.Router();
 
 // root allert 
-router.get('/customer/login',login);
+router.post('/customer/login',login);
 
 
 

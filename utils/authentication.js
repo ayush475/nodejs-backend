@@ -3,8 +3,9 @@ const { verifytoken } = require("./checkCredential");
 
 exports.isSignedIn = async (req, res, next) => {
   const authorizationHeader = req.headers["authorization"];
-  // const token = parseBearer(authorizationHeader);
-  if (authorizationHeader.startsWith("Bearer ")) {
+  console.log(authorizationHeader);
+
+  if ( authorizationHeader && authorizationHeader.startsWith("Bearer ")) {
     const token = authorizationHeader.substring(7, authorizationHeader.length);
     const decodedData = await verifytoken(token);
 

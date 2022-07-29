@@ -19,6 +19,7 @@ exports.createNewSupplier = async (req, res, next) => {
     poBox,
     supplierDetails,
     supplierImage,
+    contactNo
   } = req.body;
 
   const defaultSupplierImage = path.join(
@@ -47,7 +48,7 @@ exports.createNewSupplier = async (req, res, next) => {
       if (result) {
         // insert values into supplier
         console.log(result, "sssssssssss");
-        var sqlQuery = `Insert  into Supplier(name,email,country,state,city,street,pinCode,poBox,supplierDetails,supplierImage) 
+        var sqlQuery = `Insert  into Supplier(name,email,country,state,city,street,pinCode,poBox,contactNo,supplierDetails,supplierImage) 
       values('${name}',
       '${email}',
       '${country}',
@@ -56,6 +57,7 @@ exports.createNewSupplier = async (req, res, next) => {
       '${street}',
       '${pinCode}',
       '${poBox}',
+      '${contactNo}',
       '${supplierDetails}',
       '${`{"public_id":"${supplierImageJson.public_id}","image_url":"${supplierImageJson.image_url}"}`}'
       );`;
@@ -163,4 +165,26 @@ exports.deleteSupplierTable = async (req, res, next) => {
         });
     }
   );
+};
+
+
+exports.getAllActiveSuppliers = async (req, res, next) => {
+ 
+  
+
+  var sqlQuery=`select supplierId,name from  supplier where removedDate is null;`
+ 
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "supplier not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true,data:result });
+  });
 };

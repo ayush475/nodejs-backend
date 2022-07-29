@@ -4,6 +4,8 @@ const { getHashedPassword, comparePassword, generateToken } = require("../utils/
 
 exports.login = (req, res, next) => {
   const { email, password } = req.body;
+
+  console.log(email);
   var sqlQuery = `select email,password,customerId,role from customer where email="${email}"`;
   db.query(sqlQuery,async function (err, result, fields) {
     if (err) {
