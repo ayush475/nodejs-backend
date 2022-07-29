@@ -126,7 +126,7 @@ exports.deleteProduct= async (req, res, next) => {
   const { productId } = req.params;
   
 
-  var sqlQuery=` update Product set deletedDate=now() where productId=${productId};`
+  var sqlQuery=` update Product set deletedDate=now(),productStatus="deleted" where productId=${productId};`
  
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
@@ -145,7 +145,7 @@ exports.deleteProduct= async (req, res, next) => {
 
 
 exports.getProductDetailsForStore = async (req, res, next) => {
-var sqlQuery=`select name,brand ,price,productImage,productId from Product;`;
+var sqlQuery=`select name,brand ,price,productImage,productId from Product where productStatus="published";`;
   db.query(
     sqlQuery,
     function (err, result, fields) {
@@ -183,4 +183,47 @@ exports.getProductFullDetailsForOrder = async (req, res, next) => {
       }
     );
   };
-  
+
+
+
+  exports.getAllProductsForImport = async (req, res, next) => {
+    var sqlQuery=`select productId,name,brand,supplierId,price,customDuty,productDescription,productImage from product where productStatus != "deleted";`;
+      db.query(
+        sqlQuery,
+        function (err, result, fields) {
+          if (err) {
+            return next(new ErrorHandler(400, err.code));
+          }
+          // console.log();//json.parse  used
+          return res
+            .status(200)
+            .json({
+              sucess: true,
+              data:result,
+            });
+        }
+      );
+    };
+
+
+
+    exports.getProductNameAndImage = async (req, res, next) => {
+ 
+      const {productId}=req.params;
+    
+      var sqlQuery=`select name,productImage,productId from product where productId=${productId};`;
+     
+      db.query(sqlQuery, function (err, result, fields) {
+        if (err) {
+          return next(new ErrorHandler(400, err.code));
+        }
+        // console.log();//json.parse  used
+        console.log(result.info);
+        if (result.affectedRows == 0) {
+          return next(new ErrorHandler(404, "product not found"));
+        }
+        return res
+          .status(200)
+          .json({ sucess: true,data:result });
+      });
+    };

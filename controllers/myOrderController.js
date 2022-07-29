@@ -135,24 +135,36 @@ exports.cancelMyOrder = async (req, res, next) => {
   });
 };
 
-// exports.deleteCustomerTable = async (req, res, next) => {
-//   var sqldropTriggerQuery = `drop trigger beforeCustomerUpdate;`;
-//   var sqldropUpdateTableQuery = `drop table CustomerUpdate;`;
-//   var sqldropTableQuery = `drop table Customer;`;
-
-//   db.query(
-//     `${sqldropTriggerQuery} ${sqldropUpdateTableQuery} ${sqldropTableQuery}`,
-//     function (err, result, fields) {
-//       if (err) {
-//         return next(new ErrorHandler(400, err.code));
-//       }
-//       // console.log();//json.parse  used
-//       return res
-//         .status(200)
-//         .json({
-//           sucess: true,
-//           message: `customer table ,its update table and before update trigger deleted sucessfully`,
-//         });
-//     }
-//   );
-// };
+exports.getImportShippedOrProcessingOrdersList = async (req, res, next) => {
+ 
+  var sqlQuery=`select ((p.price*(1+p.customDuty/100))*o.quantity)as totalPrice, myOrderId,p.name as productName,p.productId,s.supplierId,p.productImage,s.name as supplierName,supplierImage,
+  quantity,myOrderStatus,orderedDate,paymentStatus
+  from myorder as o
+  inner join 
+  product as p
+  inner join 
+  supplier as s
+  where(
+  o.productId=p.productId
+  and
+  p.supplierId=s.supplierId)
+  and 
+  (
+  o.myOrderStatus="processing"
+  or o.myOrderStatus="shipped"
+  );`;
+ 
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "import orders not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true,data:result });
+  });
+};

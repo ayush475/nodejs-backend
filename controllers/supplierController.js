@@ -188,3 +188,46 @@ exports.getAllActiveSuppliers = async (req, res, next) => {
       .json({ sucess: true,data:result });
   });
 };
+
+
+exports.getSupplierNameAndImage = async (req, res, next) => {
+ 
+  const {supplierId}=req.params;
+
+  var sqlQuery=`select name,supplierImage,supplierId from supplier where supplierId=${supplierId};`;
+ 
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "supplier not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true,data:result });
+  });
+};
+
+
+
+exports.getSupplierLists = async (req, res, next) => {
+ 
+  var sqlQuery=`select supplierId,name,country,email,city,state,street,pinCode,poBox,supplierDetails,supplierImage from supplier where removedDate is null;`;
+ 
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "suppliers not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true,data:result });
+  });
+};
