@@ -168,3 +168,41 @@ exports.getImportShippedOrProcessingOrdersList = async (req, res, next) => {
       .json({ sucess: true,data:result });
   });
 };
+
+
+
+exports.getImportOrdersListByFilter = async (req, res, next) => {
+ 
+  const {myorderstatus}=req.query;
+
+  var sqlQuery=`select ((p.price*(1+p.customDuty/100))*o.quantity)as totalPrice, myOrderId,p.name as productName,p.productId,s.supplierId,p.productImage,s.name as supplierName,supplierImage,
+  quantity,myOrderStatus,orderedDate,paymentStatus
+  from myorder as o
+  inner join 
+  product as p
+  inner join 
+  supplier as s
+  where(
+  o.productId=p.productId
+  and
+  p.supplierId=s.supplierId)
+  and 
+  (
+  o.myOrderStatus="${myorderstatus}"
+  );`;
+  console.log(sqlQuery);
+ 
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "import orders not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true,data:result });
+  });
+};

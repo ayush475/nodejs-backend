@@ -126,8 +126,8 @@ exports.deleteProduct= async (req, res, next) => {
   const { productId } = req.params;
   
 
-  var sqlQuery=` update Product set deletedDate=now(),productStatus="deleted" where productId=${productId};`
- 
+  var sqlQuery=`update product set deletedDate=now(),productStatus="deleted" where productId=${productId};`
+ console.log(sqlQuery);
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
       return next(new ErrorHandler(400, err.code));
@@ -221,6 +221,79 @@ exports.getProductFullDetailsForOrder = async (req, res, next) => {
         console.log(result.info);
         if (result.affectedRows == 0) {
           return next(new ErrorHandler(404, "product not found"));
+        }
+        return res
+          .status(200)
+          .json({ sucess: true,data:result });
+      });
+    };
+
+
+
+
+
+
+
+
+
+    exports.getPublishedOrUnpublishedProductList = async (req, res, next) => {
+ 
+      var sqlQuery=`select p.name as productName,p.productId,s.supplierId,p.productImage,s.name as supplierName,supplierImage,
+      stock,productStatus,category,price
+      from product as p
+      inner join 
+      supplier as s
+      where
+      p.supplierId=s.supplierId
+      and 
+      (
+      p.productStatus="published"
+      or
+      p.productStatus="unpublished"
+      );`;
+     
+      db.query(sqlQuery, function (err, result, fields) {
+        if (err) {
+          return next(new ErrorHandler(400, err.code));
+        }
+        // console.log();//json.parse  used
+        console.log(result.info);
+        if (result.affectedRows == 0) {
+          return next(new ErrorHandler(404, "products not found"));
+        }
+        return res
+          .status(200)
+          .json({ sucess: true,data:result });
+      });
+    };
+    
+    
+    
+    exports.getProductListByFilter = async (req, res, next) => {
+     
+      const {productstatus}=req.query;
+    
+      var sqlQuery=`select p.name as productName,p.productId,s.supplierId,p.productImage,s.name as supplierName,supplierImage,
+      stock,productStatus,category,price
+      from product as p
+      inner join 
+      supplier as s
+      where
+      p.supplierId=s.supplierId
+      and 
+      (
+      p.productStatus="${productstatus}"
+      );`;
+      console.log(sqlQuery);
+     
+      db.query(sqlQuery, function (err, result, fields) {
+        if (err) {
+          return next(new ErrorHandler(400, err.code));
+        }
+        // console.log();//json.parse  used
+        console.log(result.info);
+        if (result.affectedRows == 0) {
+          return next(new ErrorHandler(404, "products orders not found"));
         }
         return res
           .status(200)
