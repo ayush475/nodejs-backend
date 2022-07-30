@@ -9,8 +9,16 @@
     user: process.env.USER,
     password: process.env.PASSWORD,
     database: process.env.DATABASE,
+    multipleStatements: true
   }
  
+  const pool_user={
+    host: process.env.HOST,
+    user: process.env.USER,
+    password: process.env.PASSWORD,
+    database: process.env.DATABASE,
+  }
+
  console.log(pool_config);
 
   const pool = mysql.createPool(pool_config);
