@@ -325,3 +325,39 @@ exports.getTopSales= async (req, res, next) => {
   });
 };
 
+
+
+exports.getCustomerOrderCompleteDetails= async (req, res, next) => {
+ const {orderId}=req.params;
+  var sqlQuery=`select *,p.name as productName,productImage,brand,category,c.name as customerName,
+  c.profileImage as customerImage,
+  c.email as customerEmail,c.contactNo as customerContactNo,
+    c.street as customerStreet,c.city as customerCity,c.state as customerState,
+    s.name as supplierName,supplierImage
+    from customerOrder as o
+    inner join product as p
+    inner join customer as c
+    inner join supplier as s
+    where(
+    o.productId=p.productId
+    and 
+    p.supplierId=s.supplierId
+    )
+    and
+    o.customerId=c.customerId
+    and o.orderId=${orderId};`;
+ 
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "customer orders not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true,data:result });
+  });
+};

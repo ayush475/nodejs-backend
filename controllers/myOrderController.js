@@ -93,6 +93,7 @@ exports.updateMyOrderDetails = async (req, res, next) => {
   // console.log(updateBlockQuery);
   var sqlQuery;
   console.log(updateData);
+ 
 
   if (updateData.myOrderStatus && updateData.myOrderStatus == "Delivered") {
     console.log("delivered");
@@ -100,7 +101,8 @@ exports.updateMyOrderDetails = async (req, res, next) => {
   } else {
     sqlQuery = `update myOrder ${finalUpdatedQuery} where myOrderId=${myOrderId};`;
   }
-
+  console.log(finalUpdatedQuery);
+  console.log(sqlQuery);
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
       return next(new ErrorHandler(400, err.code));
@@ -277,7 +279,8 @@ limit 4;`;
 exports.getMyOrdercompleteDetails = async (req, res, next) => {
 
   const {myOrderId}=req.params;
-  var sqlQuery = `select*,  p.name as productName,p.productImage as productImage,s.name as supplierImage,s.email as supplierImage from myOrder as o
+  var sqlQuery = `select*,  p.name as productName,p.productImage as productImage, s.name as supplierName,s.email as supplierEmail,s.supplierImage as supplierImage
+  from myOrder as o
   inner join 
   product as p
   inner join supplier as s
