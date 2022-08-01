@@ -10,7 +10,12 @@ const {
 const {
   createMyOrderTableIfNotExist,
 } = require("./creationTables/myOrderCreation");
-const { convertToMySqlDateTime, getVatFromProduct, getCustomDutyFromProduct, getEachPriceFromProduct } = require("./creationTables/commonCreation");
+const {
+  convertToMySqlDateTime,
+  getVatFromProduct,
+  getCustomDutyFromProduct,
+  getEachPriceFromProduct,
+} = require("./creationTables/commonCreation");
 
 // to create table in database
 
@@ -21,20 +26,13 @@ exports.createNewMyOrder = async (req, res, next) => {
   const eachPrice = await getEachPriceFromProduct(productId);
   const customDuty = await getCustomDutyFromProduct(productId);
 
-
-  let expectedDeliveryDate=new Date();
+  let expectedDeliveryDate = new Date();
   console.log(expectedDeliveryDate);
 
-    // expected delivery date set to 30 days from now
+  // expected delivery date set to 30 days from now
   //converting javascritp date to sql date time
-   expectedDeliveryDate.setDate(expectedDeliveryDate.getDate()+30);
-   expectedDeliveryDate= await convertToMySqlDateTime(expectedDeliveryDate);
-
-
-
- 
-
-
+  expectedDeliveryDate.setDate(expectedDeliveryDate.getDate() + 30);
+  expectedDeliveryDate = await convertToMySqlDateTime(expectedDeliveryDate);
 
   createMyOrderTableIfNotExist()
     .then((result) => {
@@ -50,7 +48,7 @@ exports.createNewMyOrder = async (req, res, next) => {
   "${customDuty}",
   "${expectedDeliveryDate}");`;
 
-  console.log(sqlQuery);
+        console.log(sqlQuery);
 
         // console.log(hashedPassword,"fff");
         db.query(sqlQuery, function (err, result, fields) {
@@ -82,10 +80,7 @@ exports.updateMyOrderDetails = async (req, res, next) => {
       updateData[key] !== "" &&
       updateData[key] != undefined
     ) {
-     
-     
-        updateBlockQuery += `${key}='${updateData[key]}',`;
-      
+      updateBlockQuery += `${key}='${updateData[key]}',`;
     }
   });
 
@@ -96,9 +91,15 @@ exports.updateMyOrderDetails = async (req, res, next) => {
   // var onlyUpdateQuery= req.body.filter(function(x) { return x !== null });
 
   // console.log(updateBlockQuery);
+  var sqlQuery;
+  console.log(updateData);
 
-  var sqlQuery = `update myOrder ${finalUpdatedQuery} where myOrderId=${myOrderId};`;
-  console.log(sqlQuery);
+  if (updateData.myOrderStatus && updateData.myOrderStatus == "Delivered") {
+    console.log("delivered");
+    sqlQuery = `call updateProductStockOnDelivery(${myOrderId});`;
+  } else {
+    sqlQuery = `update myOrder ${finalUpdatedQuery} where myOrderId=${myOrderId};`;
+  }
 
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
@@ -112,6 +113,31 @@ exports.updateMyOrderDetails = async (req, res, next) => {
     return res
       .status(200)
       .json({ sucess: true, message: `import  details updated sucessfully` });
+  });
+};
+
+exports.myOrderIsDeivered = async (req, res, next) => {
+  const { myOrderId } = req.params;
+  var sqlQuery = ` update MyOrder set myOrderStatus="delivered", where myOrderId=${myOrderId};`;
+
+  // query to update stock and product status to unpublished on delivered
+  // var sqlQueryToUpdateProductStock=`call updateProductStockOnDelivery(${myOrderId});`
+
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "import order not found"));
+    }
+    return res
+      .status(200)
+      .json({
+        sucess: true,
+        message: `product status changed and stock  updated sucessfully`,
+      });
   });
 };
 
@@ -136,8 +162,7 @@ exports.cancelMyOrder = async (req, res, next) => {
 };
 
 exports.getImportShippedOrProcessingOrdersList = async (req, res, next) => {
- 
-  var sqlQuery=`select ((p.price*(1+p.customDuty/100))*o.quantity)as totalPrice, myOrderId,p.name as productName,p.productId,s.supplierId,p.productImage,s.name as supplierName,supplierImage,
+  var sqlQuery = `select ((p.price*(1+p.customDuty/100))*o.quantity)as totalPrice, myOrderId,p.name as productName,p.productId,s.supplierId,p.productImage,s.name as supplierName,supplierImage,
   quantity,myOrderStatus,orderedDate,paymentStatus
   from myorder as o
   inner join 
@@ -153,7 +178,7 @@ exports.getImportShippedOrProcessingOrdersList = async (req, res, next) => {
   o.myOrderStatus="processing"
   or o.myOrderStatus="shipped"
   );`;
- 
+
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
       return next(new ErrorHandler(400, err.code));
@@ -163,19 +188,14 @@ exports.getImportShippedOrProcessingOrdersList = async (req, res, next) => {
     if (result.affectedRows == 0) {
       return next(new ErrorHandler(404, "import orders not found"));
     }
-    return res
-      .status(200)
-      .json({ sucess: true,data:result });
+    return res.status(200).json({ sucess: true, data: result });
   });
 };
 
-
-
 exports.getImportOrdersListByFilter = async (req, res, next) => {
- 
-  const {myorderstatus}=req.query;
+  const { myorderstatus } = req.query;
 
-  var sqlQuery=`select ((p.price*(1+p.customDuty/100))*o.quantity)as totalPrice, myOrderId,p.name as productName,p.productId,s.supplierId,p.productImage,s.name as supplierName,supplierImage,
+  var sqlQuery = `select ((p.price*(1+p.customDuty/100))*o.quantity)as totalPrice, myOrderId,p.name as productName,p.productId,s.supplierId,p.productImage,s.name as supplierName,supplierImage,
   quantity,myOrderStatus,orderedDate,paymentStatus
   from myorder as o
   inner join 
@@ -191,7 +211,7 @@ exports.getImportOrdersListByFilter = async (req, res, next) => {
   o.myOrderStatus="${myorderstatus}"
   );`;
   console.log(sqlQuery);
- 
+
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
       return next(new ErrorHandler(400, err.code));
@@ -201,8 +221,83 @@ exports.getImportOrdersListByFilter = async (req, res, next) => {
     if (result.affectedRows == 0) {
       return next(new ErrorHandler(404, "import orders not found"));
     }
-    return res
-      .status(200)
-      .json({ sucess: true,data:result });
+    return res.status(200).json({ sucess: true, data: result });
+  });
+};
+
+exports.getMyorderTotalCount = async (req, res, next) => {
+  var sqlQuery = `select count(*) as importCount from myOrder where myOrderStatus="delivered";`;
+
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "import orders not found"));
+    }
+    return res.status(200).json({ sucess: true, data: result });
+  });
+};
+
+exports.getTopImports = async (req, res, next) => {
+  var sqlQuery = `select ((p.price*(1+p.customDuty/100))*o.quantity)as totalPrice, myOrderId,p.name as productName,p.productId,s.supplierId,p.productImage,s.name as supplierName,supplierImage,
+  quantity,myOrderStatus,orderedDate,paymentStatus
+  from myorder as o
+  inner join 
+  product as p
+  inner join 
+  supplier as s
+  where(
+  o.productId=p.productId
+  and
+  p.supplierId=s.supplierId)
+  and 
+  (
+  o.myOrderStatus="processing"
+  or o.myOrderStatus="shipped"
+  )
+  order by quantity desc
+limit 4;`;
+
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "import orders not found"));
+    }
+    return res.status(200).json({ sucess: true, data: result });
+  });
+};
+
+exports.getMyOrdercompleteDetails = async (req, res, next) => {
+
+  const {myOrderId}=req.params;
+  var sqlQuery = `select*,  p.name as productName,p.productImage as productImage,s.name as supplierImage,s.email as supplierImage from myOrder as o
+  inner join 
+  product as p
+  inner join supplier as s
+  where(
+  o.productId=p.productId
+  )
+  and 
+  s.supplierId=p.supplierId
+  and 
+   o.myOrderId=${myOrderId};`;
+
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "import orders not found"));
+    }
+    return res.status(200).json({ sucess: true, data: result });
   });
 };

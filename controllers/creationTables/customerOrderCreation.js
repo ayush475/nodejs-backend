@@ -14,6 +14,7 @@ exports.createCustomerOrderTableIfNotExist = async () => {
             eachPrice int not null,
             quantity int not null,
             vat int not null,
+            profit int not null,
             orderStatus varchar(20) default "processing",
             paymentStatus varchar(20) default "unpaid",
             paymentMode varchar (20) default "COD",
@@ -51,11 +52,29 @@ exports.createCustomerOrderTableIfNotExist = async () => {
                updatedOn= NOW();` +
       "END;";
 
-     
+    var sqlDecreaseProductStockOnDelivery =
+      `CREATE PROCEDURE decreaseProductStockOnCustomerDelivery(IN customerOrderId int)` +
+      ` BEGIN` +
+      ` DECLARE pid INT;` +
+      ` DECLARE qty INT;` +
+      ` SET SQL_SAFE_UPDATES = 0;` +
+      ` SELECT productId INTO pid from customerOrder
+        WHERE customerOrder.orderId= customerOrderId;` +
+      ` SELECT quantity INTO qty from CustomerOrder
+        WHERE CustomerOrder.orderId= customerOrderId;` +
+      ` update product
+        set stock=stock-qty
+        where  productId=pid;` +
+      ` update CustomerOrder
+        set orderStatus="delivered",
+         paymentStatus="paid",
+        deliveredDate=now()
+        where orderId=customerOrderId;` +
+      `END;`;
 
     return new Promise(async (resolve, reject) => {
       db.query(
-        `${sqlQueryTable} ${sqlQueryUpdateTable} ${sqlBeforeUpdateTrigger}`,
+        `${sqlQueryTable} ${sqlQueryUpdateTable} ${sqlBeforeUpdateTrigger} ${sqlDecreaseProductStockOnDelivery}`,
         function (err, result, fields) {
           if (err) {
             reject(err);

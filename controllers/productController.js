@@ -22,6 +22,8 @@ exports.createNewProduct = async (req, res, next) => {
 
   const vat= await getVatFromCategory(category);
   const customDuty=await getCustomDutyFromCategory(category);
+  
+
 
   const defaultProductImage = path.join(
     __dirname,
@@ -300,3 +302,24 @@ exports.getProductFullDetailsForOrder = async (req, res, next) => {
           .json({ sucess: true,data:result });
       });
     };
+
+
+
+    exports.getTotalProductCount= async (req, res, next) => {
+      var sqlQuery=`  select count(*) as productCount from product where deletedDate is null ;`;
+        db.query(
+          sqlQuery,
+          function (err, result, fields) {
+            if (err) {
+              return next(new ErrorHandler(400, err.code));
+            }
+            // console.log();//json.parse  used
+            return res
+              .status(200)
+              .json({
+                sucess: true,
+                data:result,
+              });
+          }
+        );
+      };
