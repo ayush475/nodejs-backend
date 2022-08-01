@@ -61,6 +61,16 @@ exports.createCategoryTableIfNotExist = async () => {
       ` RETURN customdutyamt;` +
       `END;`;
 
+      // var sqlGetVatFromCategory =
+      // `CREATE FUNCTION getProfitFromCategory ( nam varchar(40) )` +
+      // ` RETURNS float deterministic` +
+      // ` BEGIN` +
+      // ` DECLARE profitamt float;` +
+      // ` select profit into profityamt from Category  where name=nam;` +
+      // ` RETURN profitamt;` +
+      // `END;`;
+
+
     return new Promise(async (resolve, reject) => {
       db.query(
         `${sqlQueryTable} ${sqlQueryUpdateTable} ${sqlBeforeUpdateTrigger} ${sqlGetCustomDutyFromCategory} ${sqlGetVAtFromCategory}`,

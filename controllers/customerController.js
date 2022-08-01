@@ -208,3 +208,23 @@ exports.getCustomerLists = async (req, res, next) => {
       .json({ sucess: true,data:result });
   });
 };
+
+
+exports.getCustomerTotalCount = async (req, res, next) => {
+ 
+  var sqlQuery=`select count(*) as customerCount from customer where closedDate is null;`;
+ 
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "customers not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true,data:result });
+  });
+};

@@ -1,5 +1,5 @@
 const express=require('express');
-const { deleteCustomerTable, createNewCustomer, updateCustomerDetails, deleteCustomer, getCustomerLists } = require('../controllers/customerController');
+const { deleteCustomerTable, createNewCustomer, updateCustomerDetails, deleteCustomer, getCustomerLists, getCustomerTotalCount } = require('../controllers/customerController');
 const { getAllOrders } = require('../controllers/orderController');
 const { getAllProducts, createProductTable, dropProductTable, createNewProduct, updateProductDetails, deleteProduct, deleteProductTable } = require('../controllers/productController');
 const { isSignedIn } = require('../utils/authentication');
@@ -18,6 +18,6 @@ router.post('/createnewcustomer',createNewCustomer);
 router.put('/update/customer/:customerId',updateCustomerDetails);
 router.put('/delete/customer/:customerId',deleteCustomer);
 router.get('/customer/lists',getCustomerLists);
-
+router.get('/customers/count',getCustomerTotalCount);
 
 module.exports=router;

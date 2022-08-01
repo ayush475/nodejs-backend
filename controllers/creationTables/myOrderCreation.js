@@ -49,18 +49,30 @@ exports.createMyOrderTableIfNotExist = async () => {
                updatedOn= NOW();` +
       "END;";
 
-   
-
-
-    
-
-     
-
-
+    var sqlUpdateProductStatusAndStockOnDelivery =
+      `CREATE PROCEDURE updateProductStockOnDelivery(IN importOrderId int)` +
+      ` BEGIN` +
+      ` DECLARE pid INT;` +
+      ` DECLARE qty INT;` +
+      ` SET SQL_SAFE_UPDATES = 0;` +
+      ` SELECT productId INTO pid from MyOrder
+        WHERE MyOrder.myOrderId= importOrderId;` +
+      ` SELECT quantity INTO qty from MyOrder
+        WHERE MyOrder.myOrderId= importOrderId;` +
+      ` update product
+        set stock=qty,
+        productStatus="unpublished"
+        where  productId=pid;` +
+      ` update MyOrder
+        set myOrderStatus="delivered",
+        paymentStatus="paid",
+        deliveredDate=now()
+        where myorderId=importOrderId;`+
+        `END;`;
 
     return new Promise(async (resolve, reject) => {
       db.query(
-        `${sqlQueryTable} ${sqlQueryUpdateTable} ${sqlBeforeUpdateTrigger}`,
+        `${sqlQueryTable} ${sqlQueryUpdateTable} ${sqlBeforeUpdateTrigger} ${sqlUpdateProductStatusAndStockOnDelivery}`,
         function (err, result, fields) {
           if (err) {
             reject(err);

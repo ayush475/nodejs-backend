@@ -1,6 +1,11 @@
 const db = require("../../config/database");
 
-const { checkIfTableExist, getVatFromProduct, getEachPriceFromProduct, getCustomDutyFromProduct } = require("./commonCreation");
+const {
+  checkIfTableExist,
+  getVatFromProduct,
+  getEachPriceFromProduct,
+  getCustomDutyFromProduct,
+} = require("./commonCreation");
 
 exports.createProductTableIfNotExist = async () => {
   const isTableExist = await checkIfTableExist("product");
@@ -61,7 +66,7 @@ exports.createProductTableIfNotExist = async () => {
                updatedOn= NOW();` +
       "END;";
 
-      var sqlGetVatFunctionQuery =
+    var sqlGetVatFunctionQuery =
       `CREATE FUNCTION getVat ( id int )` +
       ` RETURNS float deterministic` +
       ` BEGIN` +
@@ -70,7 +75,19 @@ exports.createProductTableIfNotExist = async () => {
       ` RETURN vatamt;` +
       `END;`;
 
-      var sqlGetEachPriceFunctionQuery =
+      // sending productId
+    var sqlGetProfitFunctionQuery =
+      `CREATE FUNCTION getProfitByProductIdFromCategory( id int )` +
+      ` RETURNS float deterministic` +
+      ` BEGIN` +
+      ` DECLARE categoryName varchar(40);` +
+      ` DECLARE profitamt float;` +
+      ` select category into categoryName from product where productId=id;` +
+      ` select profit into profitamt from category  where name=categoryName;` +
+      ` RETURN profitamt;` +
+      `END;`;
+
+    var sqlGetEachPriceFunctionQuery =
       `CREATE FUNCTION getEachprice ( id int )` +
       ` RETURNS float deterministic` +
       ` BEGIN` +
@@ -79,7 +96,7 @@ exports.createProductTableIfNotExist = async () => {
       ` RETURN prc;` +
       `END;`;
 
-      var sqlGetCustomDutyFunctionQuery =
+    var sqlGetCustomDutyFunctionQuery =
       `CREATE FUNCTION getCustomDuty ( id int )` +
       ` RETURNS float deterministic` +
       ` BEGIN` +
@@ -90,7 +107,7 @@ exports.createProductTableIfNotExist = async () => {
 
     return new Promise(async (resolve, reject) => {
       db.query(
-        `${sqlQueryTable} ${sqlQueryUpdateTable} ${sqlBeforeUpdateTrigger} ${sqlGetVatFunctionQuery} ${sqlGetEachPriceFunctionQuery} ${sqlGetCustomDutyFunctionQuery}`,
+        `${sqlQueryTable} ${sqlQueryUpdateTable} ${sqlBeforeUpdateTrigger} ${sqlGetVatFunctionQuery} ${sqlGetEachPriceFunctionQuery} ${sqlGetCustomDutyFunctionQuery} ${sqlGetProfitFunctionQuery}`,
         function (err, result, fields) {
           if (err) {
             reject(err);

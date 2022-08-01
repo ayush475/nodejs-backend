@@ -1,6 +1,6 @@
 const express=require('express');
 const { getAllOrders } = require('../controllers/orderController');
-const { getAllProducts, createProductTable, dropProductTable, createNewProduct, updateProductDetails, deleteProduct, deleteProductTable, getProductDetailsForStore, getProductFullDetailsForOrder, getAllProductsForImport, getProductNameAndImage, getPublishedOrUnpublishedProductList, getProductListByFilter } = require('../controllers/productController');
+const { getAllProducts, createProductTable, dropProductTable, createNewProduct, updateProductDetails, deleteProduct, deleteProductTable, getProductDetailsForStore, getProductFullDetailsForOrder, getAllProductsForImport, getProductNameAndImage, getPublishedOrUnpublishedProductList, getProductListByFilter, getTotalProductCount } = require('../controllers/productController');
 const { isSignedIn } = require('../utils/authentication');
 
 
@@ -20,7 +20,7 @@ router.get('/import/products',getAllProductsForImport);
 router.get('/productnameandimage/:productId',getProductNameAndImage);
 router.get('/publishedorunbublishedproductlist',getPublishedOrUnpublishedProductList);
 router.get('/products/filter',getProductListByFilter);
-
+router.get('/products/count',getTotalProductCount);
 
 
 // client
