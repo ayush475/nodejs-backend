@@ -231,3 +231,27 @@ exports.getSupplierLists = async (req, res, next) => {
       .json({ sucess: true,data:result });
   });
 };
+
+
+
+
+exports.getSuppierCompleteDetails = async (req, res, next) => {
+ 
+  const {supplierId}=req.params;
+
+  var sqlQuery=`select * from supplier where supplierId=${supplierId};`
+ console.log(sqlQuery,"mmmmmm");
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "supplier not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true,data:result });
+  });
+};

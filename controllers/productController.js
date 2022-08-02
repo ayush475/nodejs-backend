@@ -7,7 +7,7 @@ const {
   createSupplierTableIfNotExist,
 } = require("./creationTables/supplierCreation");
 const { createProductTableIfNotExist } = require("./creationTables/productCreation");
-const { getVatFromCategory, getCustomDutyFromCategory } = require("./creationTables/commonCreation");
+const { getVatFromCategory, getCustomDutyFromCategory, getProfitFromCategoryByProductId } = require("./creationTables/commonCreation");
 
 exports.createNewProduct = async (req, res, next) => {
   const {
@@ -168,7 +168,7 @@ var sqlQuery=`select name,brand ,price,productImage,productId from Product where
 
 exports.getProductFullDetailsForOrder = async (req, res, next) => {
   const {productId}=req.params;
-  var sqlQuery=`select name,brand,productId ,price,category,stock,productDescription ,productImage,vat from Product where productId=${productId};`;
+  var sqlQuery=`select name,brand,productId ,price,category,stock,productDescription ,productImage,vat,customDuty from Product where productId=${productId};`;
     db.query(
       sqlQuery,
       function (err, result, fields) {
@@ -186,6 +186,13 @@ exports.getProductFullDetailsForOrder = async (req, res, next) => {
     );
   };
 
+
+  exports.getProfitForProductInStore = async (req, res, next) => {
+    const {productId}=req.params;
+    const profit = await getProfitFromCategoryByProductId(productId);
+    console.log(profit);
+    return res.status(200).json({profit:profit});
+    };
 
 
   exports.getAllProductsForImport = async (req, res, next) => {
@@ -323,3 +330,35 @@ exports.getProductFullDetailsForOrder = async (req, res, next) => {
           }
         );
       };
+
+
+
+
+      exports.getCompleteProductDetails = async (req, res, next) => {
+
+
+        const {productId}=req.params;
+        var sqlQuery=`select *,p.name as productName,s.name as supplierName,supplierImage,s.supplierImage as supplierImage,p.supplierId as supplierId,s.email as supplierEmail
+        from product as p
+        inner join supplier as s
+        where 
+        p.supplierId =s.supplierId
+        and
+        p.productId=${productId};`;
+          db.query(
+            sqlQuery,
+            function (err, result, fields) {
+              if (err) {
+                return next(new ErrorHandler(400, err.code));
+              }
+              // console.log();//json.parse  used
+              return res
+                .status(200)
+                .json({
+                  sucess: true,
+                  data:result,
+                });
+            }
+          );
+        };
+        

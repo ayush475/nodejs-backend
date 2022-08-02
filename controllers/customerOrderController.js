@@ -157,7 +157,7 @@ exports.cancelCustomerOrder = async (req, res, next) => {
 
 exports.getCustomerOrderShippedOrProcessingOrdersList = async (req, res, next) => {
  
-  var sqlQuery=`select ((p.price*(1+p.vat/100))*o.quantity)as totalPrice, orderId,p.name as productName,p.productId,c.customerId,p.productImage,c.name as customerName,c.profileImage as customerImage,
+  var sqlQuery=`select (p.price*(1+o.profit/100)*(1+customDuty/100)*(1+p.vat/100))as totalPrice, orderId,p.name as productName,p.productId,c.customerId,p.productImage,c.name as customerName,c.profileImage as customerImage,
   quantity,orderStatus,orderedDate,paymentStatus,city,state,street
   from customerOrder as o
   inner join 
@@ -272,8 +272,32 @@ exports.getCustomerOrderTotalCount= async (req, res, next) => {
 
 exports.getTotalRevenue= async (req, res, next) => {
  
-  var sqlQuery=`select sum(eachPrice*quantity)as revenue from CustomerOrder where orderStatus="delivered";`
+  var sqlQuery=`select sum(o.eachPrice*o.quantity*(1+o.profit/100)*(1+p.customDuty/100))as revenue from CustomerOrder as o
+  inner join product as p
+   where orderStatus="delivered"
+   and o.productId=p.productId
+   ;`;
+
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "customer orders not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true,data:result });
+  });
+};
+
+exports.getTotalProfit= async (req, res, next) => {
  
+  var sqlQuery=` select sum(eachPrice*profit/100)as profit from CustomerOrder 
+  where orderStatus="delivered";`;
+   
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
       return next(new ErrorHandler(400, err.code));
