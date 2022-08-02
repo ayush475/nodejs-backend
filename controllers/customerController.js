@@ -4,12 +4,13 @@ const path = require("path");
 
 const ErrorHandler = require("../errorHandler/errorhandler");
 const { getHashedPassword } = require("../utils/checkCredential");
-const { createCustomerTableIfNotExist } = require("./creationTables/customerCreation");
-
+const {
+  createCustomerTableIfNotExist,
+} = require("./creationTables/customerCreation");
 
 // to create table in database
 
-exports.createNewCustomer = async(req, res, next) => {
+exports.createNewCustomer = async (req, res, next) => {
   const {
     email,
     password,
@@ -22,14 +23,13 @@ exports.createNewCustomer = async(req, res, next) => {
     profileImage,
   } = req.body;
 
-  const hashedPassword= await getHashedPassword(password);
-
+  const hashedPassword = await getHashedPassword(password);
 
   const defaultcustomerImage = path.join(
     __dirname,
     "../defaultImages/defaultCustomerImage.jpg"
   );
-  const customerImageUpload= profileImage || defaultcustomerImage;
+  const customerImageUpload = profileImage || defaultcustomerImage;
 
   console.log(defaultcustomerImage, "llm");
   const mycloud = await cloudinary.v2.uploader.upload(customerImageUpload, {
@@ -48,12 +48,12 @@ exports.createNewCustomer = async(req, res, next) => {
   // create
 
   createCustomerTableIfNotExist()
-  .then((result) => {
-    if (result) {
-      // insert values into supplier
-      console.log(result, "sssssssssss");
-    
-  var sqlQuery = `insert into customer(email,password,name,customerType,state,city,street,contactNo,profileImage) 
+    .then((result) => {
+      if (result) {
+        // insert values into supplier
+        console.log(result, "sssssssssss");
+
+        var sqlQuery = `insert into customer(email,password,name,customerType,state,city,street,contactNo,profileImage) 
   values(
 "${email}",
    "${hashedPassword}",
@@ -66,36 +66,26 @@ exports.createNewCustomer = async(req, res, next) => {
    '${`{"public_id":"${customerImageJson.public_id}","image_url":"${customerImageJson.image_url}"}`}'
  );`;
 
- // console.log(hashedPassword,"fff");
- db.query(sqlQuery, function (err, result, fields) {
-   if (err){
-     return next(new ErrorHandler(400,err.code))
-   };
-   // console.log();//json.parse  used
-   return res.status(200).json({sucess:true,message:`user with email ${email} created`});
- });
-
-     
-
-     
-    }
-  })
-  .catch((err) => {
-    console.log(err);
-    return next(new ErrorHandler(400, err.code));
-  });
-
-
-
-
-
-
-
+        // console.log(hashedPassword,"fff");
+        db.query(sqlQuery, function (err, result, fields) {
+          if (err) {
+            return next(new ErrorHandler(400, err.code));
+          }
+          // console.log();//json.parse  used
+          return res
+            .status(200)
+            .json({
+              sucess: true,
+              message: `user with email ${email} created`,
+            });
+        });
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+      return next(new ErrorHandler(400, err.code));
+    });
 };
-
-
-
-
 
 exports.updateCustomerDetails = async (req, res, next) => {
   const { customerId } = req.params;
@@ -110,10 +100,9 @@ exports.updateCustomerDetails = async (req, res, next) => {
       updateData[key] != undefined
     ) {
       // skip password key for this update
-      if(key!=="password"){
+      if (key !== "password") {
         updateBlockQuery += `${key}='${updateData[key]}',`;
       }
-      
     }
   });
 
@@ -126,7 +115,7 @@ exports.updateCustomerDetails = async (req, res, next) => {
   // console.log(updateBlockQuery);
 
   var sqlQuery = `update customer ${finalUpdatedQuery} where customerId=${customerId};`;
-    console.log(sqlQuery);
+  console.log(sqlQuery);
 
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
@@ -143,12 +132,11 @@ exports.updateCustomerDetails = async (req, res, next) => {
   });
 };
 
-exports.deleteCustomer= async (req, res, next) => {
+exports.deleteCustomer = async (req, res, next) => {
   const { customerId } = req.params;
-  
 
-  var sqlQuery=` update Customer set closedDate=now() where customerId=${customerId};`
- 
+  var sqlQuery = ` update Customer set closedDate=now() where customerId=${customerId};`;
+
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
       return next(new ErrorHandler(400, err.code));
@@ -164,7 +152,6 @@ exports.deleteCustomer= async (req, res, next) => {
   });
 };
 
-
 exports.deleteCustomerTable = async (req, res, next) => {
   var sqldropTriggerQuery = `drop trigger beforeCustomerUpdate;`;
   var sqldropUpdateTableQuery = `drop table CustomerUpdate;`;
@@ -177,23 +164,17 @@ exports.deleteCustomerTable = async (req, res, next) => {
         return next(new ErrorHandler(400, err.code));
       }
       // console.log();//json.parse  used
-      return res
-        .status(200)
-        .json({
-          sucess: true,
-          message: `customer table ,its update table and before update trigger deleted sucessfully`,
-        });
+      return res.status(200).json({
+        sucess: true,
+        message: `customer table ,its update table and before update trigger deleted sucessfully`,
+      });
     }
   );
 };
 
-
-
-
 exports.getCustomerLists = async (req, res, next) => {
- 
-  var sqlQuery=`select customerId,email,name,customerType,state,city,street,contactNo,profileImage from customer where closedDate is null;`;
- 
+  var sqlQuery = `select customerId,email,name,customerType,state,city,street,contactNo,profileImage from customer where closedDate is null;`;
+
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
       return next(new ErrorHandler(400, err.code));
@@ -203,17 +184,51 @@ exports.getCustomerLists = async (req, res, next) => {
     if (result.affectedRows == 0) {
       return next(new ErrorHandler(404, "customers not found"));
     }
-    return res
-      .status(200)
-      .json({ sucess: true,data:result });
+    return res.status(200).json({ sucess: true, data: result });
+  });
+};
+
+exports.getCustomerTotalCount = async (req, res, next) => {
+  var sqlQuery = `select count(*) as customerCount from customer where closedDate is null;`;
+
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "customers not found"));
+    }
+    return res.status(200).json({ sucess: true, data: result });
+  });
+};
+
+exports.getCustomerCompleteDetails = async (req, res, next) => {
+
+  const {customerId}=req.params;
+  var sqlQuery = `select customerId,email,name,customerType,state,
+  street,city,contactNo,profileImage,role,shippingAddress,
+  openedDate,closedDate from customer where customerId=${customerId};`;
+
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "customers not found"));
+    }
+    return res.status(200).json({ sucess: true, data: result });
   });
 };
 
 
-exports.getCustomerTotalCount = async (req, res, next) => {
- 
-  var sqlQuery=`select count(*) as customerCount from customer where closedDate is null;`;
- 
+exports.getCustomerNameAndProfileImage= async (req, res, next) => {
+const {email}=req.body;
+  var sqlQuery = `select name,profileImage,customerId from customer where email="${email}";`;
+
   db.query(sqlQuery, function (err, result, fields) {
     if (err) {
       return next(new ErrorHandler(400, err.code));
@@ -223,8 +238,6 @@ exports.getCustomerTotalCount = async (req, res, next) => {
     if (result.affectedRows == 0) {
       return next(new ErrorHandler(404, "customers not found"));
     }
-    return res
-      .status(200)
-      .json({ sucess: true,data:result });
+    return res.status(200).json({ sucess: true, data: result });
   });
 };

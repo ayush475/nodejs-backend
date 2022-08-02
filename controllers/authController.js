@@ -6,7 +6,8 @@ exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   console.log(email);
-  var sqlQuery = `select email,password,customerId,role from customer where email="${email}"`;
+  var sqlQuery = `select email,password,customerId,role from customer where email="${email}" and closedDate is null;`;
+  console.log(sqlQuery);
   db.query(sqlQuery,async function (err, result, fields) {
     if (err) {
       return next(new ErrorHandler(400, err.code));
@@ -23,12 +24,36 @@ exports.login = (req, res, next) => {
       if(isAuthenticated){
         const token =await generateToken(result[0].customerId,result[0].email,result[0].role);
         console.log(token);
-        return res.status(200).json({sucess:true, token:token ,role:result[0].role,message:"login sucessful"});
+        return res.status(200).json({sucess:true,email:result[0].email, token:token ,role:result[0].role,message:"login sucessful"});
 
       }else{
       return  next(new ErrorHandler(400,"password and email doesnot match"))
       }
     }
    
+  });
+};
+
+exports.makeCustomerAdmin = async (req, res, next) => {
+  const {email}=req.body;
+
+  
+  var sqlQuery = `update customer
+  set role="admin"
+   where email="${email}";`;
+    console.log(sqlQuery);
+
+  db.query(sqlQuery, function (err, result, fields) {
+    if (err) {
+      return next(new ErrorHandler(400, err.code));
+    }
+    // console.log();//json.parse  used
+    console.log(result.info);
+    if (result.affectedRows == 0) {
+      return next(new ErrorHandler(404, "customer not found"));
+    }
+    return res
+      .status(200)
+      .json({ sucess: true, message: `admin made sucessfully` });
   });
 };

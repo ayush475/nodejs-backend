@@ -1,5 +1,5 @@
 const express=require('express');
-const { deleteCategoryTable, createNewCategory, updateCategoryDetails, deleteCategory, getAllCategory, getAllActiveCategory } = require('../controllers/categoryController');
+const { deleteCategoryTable, createNewCategory, updateCategoryDetails, deleteCategory, getAllCategory, getAllActiveCategory, getCompleteCategoriesDetails } = require('../controllers/categoryController');
 
 
 
@@ -16,5 +16,6 @@ router.post('/createnewcategory',createNewCategory);
 router.put('/update/category/:categoryId',updateCategoryDetails);
 router.put('/delete/category/:categoryId',deleteCategory);
 router.get('/allcategories',getAllActiveCategory);
+router.get('/categories/details',getCompleteCategoriesDetails);
 
 module.exports=router;
